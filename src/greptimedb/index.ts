@@ -563,6 +563,9 @@ export function transformGreptimeResponseToGrafana(
       groupingColumnIndices = columnSchemas.map((colSchema, i) => {
         return groupByColumns.includes(colSchema.name) ? i : -1;
       }).filter(i => i !== -1);
+      groupingColumnIndices = groupingColumnIndices.filter(i => {
+        return mapGreptimeTypeToGrafana(columnSchemas[i].data_type) !== FieldType.time;
+      });
     }
 
     // --- Data Transposition and Series Creation ---
