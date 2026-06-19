@@ -53,7 +53,7 @@ import { createElement as createReactElement, ReactNode } from 'react';
 import { dataFrameHasLogLabelWithName, transformQueryResponseWithTraceAndLogLinks } from './utils';
 import { pluginVersion } from 'utils/version';
 import LogsContextPanel from 'components/LogsContextPanel';
-import { transformGreptimeResponseToGrafana, transformGreptimeDBLogs, transformGreptimeDBTraceDetails } from '../greptimedb';
+import { transformGreptimeResponse, transformGreptimeDBLogs, transformGreptimeDBTraceDetails } from '../greptimedb';
 import { GreptimeResponse } from 'greptimedb/types';
 
 function createMultiSearchAnyEquivalent(llfColumn: string, searchTermsString: string, alias: string): { aggregateType: AggregateType; column: string; alias: string } {
@@ -947,7 +947,11 @@ export class Datasource
             
             return frames;
           } else {
-            return transformGreptimeResponseToGrafana(greptimeData, target.refId, sql);
+            return transformGreptimeResponse(greptimeData, {
+              refId: target.refId,
+              queryType: queryType === QueryType.TimeSeries ? QueryType.TimeSeries : QueryType.Table,
+              query: target,
+            });
           }
           
           
