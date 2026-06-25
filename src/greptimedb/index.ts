@@ -250,11 +250,13 @@ export function transformGreptimeDBTraceDetails(response: GreptimeResponse, buil
 
   const columnNames = records.schema.column_schemas.map((column) => column.name);
   const columnIndexByName = new Map(columnNames.map((name, index) => [name, index]));
-  const tagColumnNames = getColumnsByHint(builderOptions, ColumnHint.TraceTags)?.map((column) => column.name) || [];
-  const serviceTagColumnNames = getColumnsByHint(builderOptions, ColumnHint.TraceServiceTags)?.map((column) => column.name) || [];
-  const eventColumnName = getColumnsByHint(builderOptions, ColumnHint.TraceEventsPrefix)?.[0]?.name || GREPTIME_TRACE_DEFAULTS.eventsColumn;
   const tagColumnPrefix = normalizeTraceColumnPrefix(undefined, GREPTIME_TRACE_DEFAULTS.tagColumnPrefix);
   const serviceTagColumnPrefix = normalizeTraceColumnPrefix(undefined, GREPTIME_TRACE_DEFAULTS.serviceTagColumnPrefix);
+  const configuredTagColumnNames = getColumnsByHint(builderOptions, ColumnHint.TraceTags)?.map((column) => column.name) || [];
+  const configuredServiceTagColumnNames = getColumnsByHint(builderOptions, ColumnHint.TraceServiceTags)?.map((column) => column.name) || [];
+  const tagColumnNames = configuredTagColumnNames.length > 0 ? configuredTagColumnNames : columnNames.filter((name) => name.startsWith(tagColumnPrefix));
+  const serviceTagColumnNames = configuredServiceTagColumnNames.length > 0 ? configuredServiceTagColumnNames : columnNames.filter((name) => name.startsWith(serviceTagColumnPrefix));
+  const eventColumnName = getColumnsByHint(builderOptions, ColumnHint.TraceEventsPrefix)?.[0]?.name || GREPTIME_TRACE_DEFAULTS.eventsColumn;
 
   const spans: GrafanaTraceSpan[] = records.rows.map(row => {
     const data: Record<string, any> = {};

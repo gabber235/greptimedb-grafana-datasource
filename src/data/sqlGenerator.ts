@@ -159,6 +159,10 @@ const generateTraceIdQuery = (options: QueryBuilderOptions): string => {
     selectParts.push(`${escapeIdentifier(traceEventsColumn.name)} AS logs`);
   }
 
+  if (options.meta?.isTraceIdMode && (traceTags?.length || 0) === 0 && (traceServiceTags?.length || 0) === 0) {
+    selectParts.push('*');
+  }
+
   const selectPartsSql = selectParts.join(', ');
 
   // Optimize trace ID filtering for OTel enabled trace lookups
