@@ -11,6 +11,8 @@ import { CHTracesConfig } from 'types/config';
 import allLabels from 'labels';
 import { columnLabelToPlaceholder } from 'data/utils';
 
+const splitColumnList = (value: string): string[] => value.split(',').map(column => column.trim()).filter(Boolean);
+
 interface TraceConfigProps {
   tracesConfig?: CHTracesConfig;
   onDefaultDatabaseChange: (v: string) => void;
@@ -25,9 +27,11 @@ interface TraceConfigProps {
   onDurationColumnChange: (v: string) => void;
   onDurationUnitChange: (v: TimeUnit) => void;
   onStartTimeColumnChange: (v: string) => void;
-  onTagsColumnChange: (v: string) => void;
-  onServiceTagsColumnChange: (v: string) => void;
-  onEventsColumnPrefixChange: (v: string) => void;
+  onTagColumnPrefixChange: (v: string) => void;
+  onServiceTagColumnPrefixChange: (v: string) => void;
+  onExcludedTagColumnsChange: (v: string[]) => void;
+  onExcludedServiceTagColumnsChange: (v: string[]) => void;
+  onEventsColumnChange: (v: string) => void;
 }
 
 export const TracesConfig = (props: TraceConfigProps) => {
@@ -36,13 +40,15 @@ export const TracesConfig = (props: TraceConfigProps) => {
     // onOtelEnabledChange, onOtelVersionChange,
     onTraceIdColumnChange, onSpanIdColumnChange, onOperationNameColumnChange, onParentSpanIdColumnChange,
     onServiceNameColumnChange, onDurationColumnChange, onDurationUnitChange, onStartTimeColumnChange,
-    onTagsColumnChange, onServiceTagsColumnChange, onEventsColumnPrefixChange
+    onTagColumnPrefixChange, onServiceTagColumnPrefixChange, onExcludedTagColumnsChange,
+    onExcludedServiceTagColumnsChange, onEventsColumnChange
   } = props;
   let {
     defaultDatabase, defaultTable,
     otelEnabled, otelVersion,
     traceIdColumn, spanIdColumn, operationNameColumn, parentSpanIdColumn, serviceNameColumn,
-    durationColumn, durationUnit, startTimeColumn, tagsColumn, serviceTagsColumn, eventsColumnPrefix
+    durationColumn, durationUnit, startTimeColumn, tagColumnPrefix, serviceTagColumnPrefix,
+    excludedTagColumns, excludedServiceTagColumns, eventsColumn
   } = (props.tracesConfig || {}) as CHTracesConfig;
   const labels = allLabels.components.Config.TracesConfig;
 
@@ -55,9 +61,9 @@ export const TracesConfig = (props: TraceConfigProps) => {
     serviceNameColumn = otelConfig.traceColumnMap.get(ColumnHint.TraceServiceName);
     operationNameColumn = otelConfig.traceColumnMap.get(ColumnHint.TraceOperationName);
     durationColumn = otelConfig.traceColumnMap.get(ColumnHint.TraceDurationTime);
-    tagsColumn = otelConfig.traceColumnMap.get(ColumnHint.TraceTags);
-    serviceTagsColumn = otelConfig.traceColumnMap.get(ColumnHint.TraceServiceTags);
-    eventsColumnPrefix = otelConfig.traceColumnMap.get(ColumnHint.TraceEventsPrefix);
+    tagColumnPrefix = otelConfig.traceColumnMap.get(ColumnHint.TraceTags);
+    serviceTagColumnPrefix = otelConfig.traceColumnMap.get(ColumnHint.TraceServiceTags);
+    eventsColumn = otelConfig.traceColumnMap.get(ColumnHint.TraceEventsPrefix);
     durationUnit = otelConfig.traceDurationUnit.toString();
   }
 
@@ -172,24 +178,40 @@ export const TracesConfig = (props: TraceConfigProps) => {
           label={labels.columns.tags.label}
           placeholder={columnLabelToPlaceholder(labels.columns.tags.label)}
           tooltip={labels.columns.tags.tooltip}
-          value={tagsColumn || ''}
-          onChange={onTagsColumnChange}
+          value={tagColumnPrefix || 'span_attributes.'}
+          onChange={onTagColumnPrefixChange}
         />
         <LabeledInput
           disabled={otelEnabled}
           label={labels.columns.serviceTags.label}
           placeholder={columnLabelToPlaceholder(labels.columns.serviceTags.label)}
           tooltip={labels.columns.serviceTags.tooltip}
-          value={serviceTagsColumn || ''}
-          onChange={onServiceTagsColumnChange}
+          value={serviceTagColumnPrefix || 'resource_attributes.'}
+          onChange={onServiceTagColumnPrefixChange}
+        />
+        <LabeledInput
+          disabled={otelEnabled}
+          label="Excluded span attribute columns"
+          placeholder="span_attributes.code.file.path, span_attributes.thread.id"
+          tooltip="Comma-separated Greptime trace span attribute columns to hide from trace tags."
+          value={(excludedTagColumns || []).join(', ')}
+          onChange={value => onExcludedTagColumnsChange(splitColumnList(value))}
+        />
+        <LabeledInput
+          disabled={otelEnabled}
+          label="Excluded service attribute columns"
+          placeholder="resource_attributes.telemetry.sdk.version"
+          tooltip="Comma-separated Greptime trace resource attribute columns to hide from service tags."
+          value={(excludedServiceTagColumns || []).join(', ')}
+          onChange={value => onExcludedServiceTagColumnsChange(splitColumnList(value))}
         />
         <LabeledInput
           disabled={otelEnabled}
           label={labels.columns.eventsPrefix.label}
-          placeholder={columnLabelToPlaceholder(labels.columns.eventsPrefix.label)}
+          placeholder="span_events"
           tooltip={labels.columns.eventsPrefix.tooltip}
-          value={eventsColumnPrefix || ''}
-          onChange={onEventsColumnPrefixChange}
+          value={eventsColumn || 'span_events'}
+          onChange={onEventsColumnChange}
         />
       </ConfigSubSection>
     </ConfigSection>

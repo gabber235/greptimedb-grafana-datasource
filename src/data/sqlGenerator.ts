@@ -140,13 +140,13 @@ const generateTraceIdQuery = (options: QueryBuilderOptions): string => {
  
   if (traceTags !== undefined) {
     // selectParts.push(`arrayMap(key -> map('key', key, 'value',${escapeIdentifier(traceTags.name)}[key]), mapKeys(${escapeIdentifier(traceTags.name)})) as tags`);
-    traceTags.map((v) => selectParts.push(`"${v.name}"`))
+    traceTags.forEach((v) => selectParts.push(escapeIdentifier(v.name)));
   }
 
  
   const traceServiceTags = getColumnsByHint(options, ColumnHint.TraceServiceTags);
   if (traceServiceTags !== undefined) {
-    traceServiceTags.map((v) => selectParts.push(`"${v.name}"`))
+    traceServiceTags.forEach((v) => selectParts.push(escapeIdentifier(v.name)));
     // selectParts.push(`arrayMap(key -> map('key', key, 'value',${escapeIdentifier(traceServiceTags.name)}[key]), mapKeys(${escapeIdentifier(traceServiceTags.name)})) as serviceTags`);
   }
 
@@ -154,9 +154,9 @@ const generateTraceIdQuery = (options: QueryBuilderOptions): string => {
   if (traceStatusCode !== undefined) {
     selectParts.push(`if(${escapeIdentifier(traceStatusCode.name)} IN ('Error', 'STATUS_CODE_ERROR'), 2, 0) as statusCode`);
   }
-  const traceEventsPrefix = getColumnByHint(options, ColumnHint.TraceEventsPrefix);
-  if (traceEventsPrefix !== undefined) {
-    selectParts.push(`arrayMap((name, timestamp, attributes) -> tuple(name, toString(toUnixTimestamp64Milli(timestamp)), arrayMap( key -> map('key', key, 'value', attributes[key]), mapKeys(attributes)))::Tuple(name String, timestamp String, fields Array(Map(String, String))),${escapeIdentifier(traceEventsPrefix.name)}.Name, ${escapeIdentifier(traceEventsPrefix.name)}.Timestamp, ${escapeIdentifier(traceEventsPrefix.name)}.Attributes) AS logs`);
+  const traceEventsColumn = getColumnByHint(options, ColumnHint.TraceEventsPrefix);
+  if (traceEventsColumn !== undefined) {
+    selectParts.push(`${escapeIdentifier(traceEventsColumn.name)} AS logs`);
   }
 
   const selectPartsSql = selectParts.join(', ');

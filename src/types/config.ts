@@ -95,9 +95,11 @@ export interface CHTracesConfig {
   durationColumn?: string;
   durationUnit?: string;
   startTimeColumn?: string;
-  tagsColumn?: string;
-  serviceTagsColumn?: string;
-  eventsColumnPrefix?: string;
+  tagColumnPrefix?: string;
+  serviceTagColumnPrefix?: string;
+  excludedTagColumns?: string[];
+  excludedServiceTagColumns?: string[];
+  eventsColumn?: string;
 }
 
 export interface AliasTableEntry {

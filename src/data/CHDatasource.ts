@@ -22,6 +22,7 @@ import {
 import {  BackendSrvRequest, DataSourceWithBackend, FetchResponse, getBackendSrv, getTemplateSrv } from '@grafana/runtime';
 import { Observable, map, firstValueFrom, catchError, of, forkJoin } from 'rxjs';
 import { CHConfig } from 'types/config';
+import { GREPTIME_TRACE_DEFAULTS, normalizeTraceColumnPrefix } from 'greptimedb/traceModel';
 import { EditorType, CHQuery } from 'types/sql';
 import {
   QueryType,
@@ -599,11 +600,36 @@ export class Datasource
     traceConfig.serviceNameColumn && result.set(ColumnHint.TraceServiceName, traceConfig.serviceNameColumn);
     traceConfig.durationColumn && result.set(ColumnHint.TraceDurationTime, traceConfig.durationColumn);
     traceConfig.startTimeColumn && result.set(ColumnHint.Time, traceConfig.startTimeColumn);
-    traceConfig.tagsColumn && result.set(ColumnHint.TraceTags, traceConfig.tagsColumn);
-    traceConfig.serviceTagsColumn && result.set(ColumnHint.TraceServiceTags, traceConfig.serviceTagsColumn);
-    traceConfig.eventsColumnPrefix && result.set(ColumnHint.TraceEventsPrefix, traceConfig.eventsColumnPrefix);
+    result.set(ColumnHint.TraceEventsPrefix, traceConfig.eventsColumn || GREPTIME_TRACE_DEFAULTS.eventsColumn);
 
     return result;
+  }
+
+  getDefaultNativeTraceColumns(allColumns: readonly TableColumn[]): SelectedColumn[] {
+    const traceConfig = this.settings.jsonData.traces;
+    if (!traceConfig) {
+      return [];
+    }
+
+    const excludedTagColumns = new Set(traceConfig.excludedTagColumns || []);
+    const excludedServiceTagColumns = new Set(traceConfig.excludedServiceTagColumns || []);
+    const tagColumnPrefix = normalizeTraceColumnPrefix(traceConfig.tagColumnPrefix, GREPTIME_TRACE_DEFAULTS.tagColumnPrefix);
+    const serviceTagColumnPrefix = normalizeTraceColumnPrefix(traceConfig.serviceTagColumnPrefix, GREPTIME_TRACE_DEFAULTS.serviceTagColumnPrefix);
+    const eventsColumn = traceConfig.eventsColumn || GREPTIME_TRACE_DEFAULTS.eventsColumn;
+
+    const selectedColumns: SelectedColumn[] = [];
+
+    allColumns.forEach((column) => {
+      if (column.name === eventsColumn) {
+        selectedColumns.push({ name: column.name, type: column.type, hint: ColumnHint.TraceEventsPrefix });
+      } else if (column.name.startsWith(tagColumnPrefix) && !excludedTagColumns.has(column.name)) {
+        selectedColumns.push({ name: column.name, type: column.type, hint: ColumnHint.TraceTags });
+      } else if (column.name.startsWith(serviceTagColumnPrefix) && !excludedServiceTagColumns.has(column.name)) {
+        selectedColumns.push({ name: column.name, type: column.type, hint: ColumnHint.TraceServiceTags });
+      }
+    });
+
+    return selectedColumns;
   }
 
   /**

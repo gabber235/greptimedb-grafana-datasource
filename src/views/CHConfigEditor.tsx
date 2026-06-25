@@ -70,7 +70,7 @@ export const ConfigEditor: React.FC<ConfigEditorProps> = (props) => {
       }
     });
   };
-  const onTracesConfigChange = (key: keyof CHTracesConfig, value: string | boolean) => {
+  const onTracesConfigChange = (key: keyof CHTracesConfig, value: string | boolean | string[]) => {
     onOptionsChange({
       ...options,
       jsonData: {
@@ -269,9 +269,11 @@ export const ConfigEditor: React.FC<ConfigEditorProps> = (props) => {
           onDurationColumnChange={c => onTracesConfigChange('durationColumn', c)}
           onDurationUnitChange={c => onTracesConfigChange('durationUnit', c)}
           onStartTimeColumnChange={c => onTracesConfigChange('startTimeColumn', c)}
-          onTagsColumnChange={c => onTracesConfigChange('tagsColumn', c)}
-          onServiceTagsColumnChange={c => onTracesConfigChange('serviceTagsColumn', c)}
-          onEventsColumnPrefixChange={c => onTracesConfigChange('eventsColumnPrefix', c)}
+          onTagColumnPrefixChange={c => onTracesConfigChange('tagColumnPrefix', c)}
+          onServiceTagColumnPrefixChange={c => onTracesConfigChange('serviceTagColumnPrefix', c)}
+          onExcludedTagColumnsChange={c => onTracesConfigChange('excludedTagColumns', c)}
+          onExcludedServiceTagColumnsChange={c => onTracesConfigChange('excludedServiceTagColumns', c)}
+          onEventsColumnChange={c => onTracesConfigChange('eventsColumn', c)}
         />
 
         <Divider />

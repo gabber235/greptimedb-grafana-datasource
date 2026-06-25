@@ -180,16 +180,16 @@ export default {
             tooltip: 'Column for the duration time'
           },
           tags: {
-            label: 'Tags column',
-            tooltip: 'Column for the trace tags'
+            label: 'Span attribute column prefix',
+            tooltip: 'Prefix for flattened Greptime span attribute columns included as trace tags'
           },
           serviceTags: {
-            label: 'Service Tags column',
-            tooltip: 'Column for the service tags'
+            label: 'Service attribute column prefix',
+            tooltip: 'Prefix for flattened Greptime resource attribute columns included as service tags'
           },
           eventsPrefix: {
-            label: 'Events column',
-            tooltip: 'Prefix for the events column'
+            label: 'Events JSON column',
+            tooltip: 'Greptime JSON column containing span events'
           }
         }
       },
@@ -446,7 +446,7 @@ export default {
       [ColumnHint.TraceTags]: 'Tags',
       [ColumnHint.TraceServiceTags]: 'Service Tags',
       [ColumnHint.TraceStatusCode]: 'Status Code',
-      [ColumnHint.TraceEventsPrefix]: 'Events Prefix',
+      [ColumnHint.TraceEventsPrefix]: 'Events JSON Column',
     }
   }
 }

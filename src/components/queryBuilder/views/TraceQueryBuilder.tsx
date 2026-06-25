@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Filter, QueryBuilderOptions, SelectedColumn, ColumnHint, TimeUnit, OrderBy } from 'types/queryBuilder';
 import { ColumnSelect, ColumnSelectMulti } from '../ColumnSelect';
 import { FiltersEditor } from '../FilterEditor';
@@ -103,6 +103,32 @@ export const TraceQueryBuilder = (props: TraceQueryBuilderProps) => {
   }, builderState);
 
   useTraceDefaultsOnMount(datasource, isNewQuery, builderOptions, builderOptionsDispatch);
+
+  useEffect(() => {
+    if (builderState.otelEnabled || allColumns.length === 0) {
+      return;
+    }
+
+    const hasNativeTraceColumns = Boolean(builderState.tagsColumn.length || builderState.serviceTagsColumn?.length || builderState.eventsColumnPrefix);
+    if (hasNativeTraceColumns) {
+      return;
+    }
+
+    const nativeTraceColumns = datasource.getDefaultNativeTraceColumns(allColumns);
+    if (nativeTraceColumns.length === 0) {
+      return;
+    }
+
+    const existingColumns = builderOptions.columns || [];
+    const existingNames = new Set(existingColumns.map((column) => column.name));
+    const nextColumns = [
+      ...existingColumns,
+      ...nativeTraceColumns.filter((column) => !existingNames.has(column.name)),
+    ];
+
+    builderOptionsDispatch(setOptions({ columns: nextColumns }));
+  }, [allColumns, builderOptions.columns, builderOptionsDispatch, builderState.eventsColumnPrefix, builderState.otelEnabled, builderState.serviceTagsColumn?.length, builderState.tagsColumn.length, datasource]);
+
   useOtelColumns(builderState.otelEnabled, builderState.otelVersion, builderOptionsDispatch);
   useDefaultFilters(builderOptions.table, builderState.isTraceIdMode, isNewQuery, builderOptionsDispatch);
 

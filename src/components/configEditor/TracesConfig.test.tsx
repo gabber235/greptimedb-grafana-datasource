@@ -22,9 +22,11 @@ describe('TracesConfig', () => {
         onDurationColumnChange={() => {}}
         onDurationUnitChange={() => {}}
         onStartTimeColumnChange={() => {}}
-        onTagsColumnChange={() => {}}
-        onServiceTagsColumnChange={() => {}}
-        onEventsColumnPrefixChange={() => {}}
+        onTagColumnPrefixChange={() => {}}
+        onServiceTagColumnPrefixChange={() => {}}
+        onExcludedTagColumnsChange={() => {}}
+        onExcludedServiceTagColumnsChange={() => {}}
+        onEventsColumnChange={() => {}}
       />
     );
     expect(result.container.firstChild).not.toBeNull();
@@ -47,9 +49,11 @@ describe('TracesConfig', () => {
         onDurationColumnChange={() => {}}
         onDurationUnitChange={() => {}}
         onStartTimeColumnChange={() => {}}
-        onTagsColumnChange={() => {}}
-        onServiceTagsColumnChange={() => {}}
-        onEventsColumnPrefixChange={() => {}}
+        onTagColumnPrefixChange={() => {}}
+        onServiceTagColumnPrefixChange={() => {}}
+        onExcludedTagColumnsChange={() => {}}
+        onExcludedServiceTagColumnsChange={() => {}}
+        onEventsColumnChange={() => {}}
       />
     );
     expect(result.container.firstChild).not.toBeNull();
@@ -79,9 +83,11 @@ describe('TracesConfig', () => {
         onDurationColumnChange={() => {}}
         onDurationUnitChange={() => {}}
         onStartTimeColumnChange={() => {}}
-        onTagsColumnChange={() => {}}
-        onServiceTagsColumnChange={() => {}}
-        onEventsColumnPrefixChange={() => {}}
+        onTagColumnPrefixChange={() => {}}
+        onServiceTagColumnPrefixChange={() => {}}
+        onExcludedTagColumnsChange={() => {}}
+        onExcludedServiceTagColumnsChange={() => {}}
+        onEventsColumnChange={() => {}}
       />
     );
     expect(result.container.firstChild).not.toBeNull();
@@ -111,9 +117,11 @@ describe('TracesConfig', () => {
         onDurationColumnChange={() => {}}
         onDurationUnitChange={() => {}}
         onStartTimeColumnChange={() => {}}
-        onTagsColumnChange={() => {}}
-        onServiceTagsColumnChange={() => {}}
-        onEventsColumnPrefixChange={() => {}}
+        onTagColumnPrefixChange={() => {}}
+        onServiceTagColumnPrefixChange={() => {}}
+        onExcludedTagColumnsChange={() => {}}
+        onExcludedServiceTagColumnsChange={() => {}}
+        onEventsColumnChange={() => {}}
       />
     );
     expect(result.container.firstChild).not.toBeNull();
@@ -142,9 +150,11 @@ describe('TracesConfig', () => {
         onDurationColumnChange={() => {}}
         onDurationUnitChange={() => {}}
         onStartTimeColumnChange={() => {}}
-        onTagsColumnChange={() => {}}
-        onServiceTagsColumnChange={() => {}}
-        onEventsColumnPrefixChange={() => {}}
+        onTagColumnPrefixChange={() => {}}
+        onServiceTagColumnPrefixChange={() => {}}
+        onExcludedTagColumnsChange={() => {}}
+        onExcludedServiceTagColumnsChange={() => {}}
+        onEventsColumnChange={() => {}}
       />
     );
     expect(result.container.firstChild).not.toBeNull();
@@ -174,9 +184,11 @@ describe('TracesConfig', () => {
         onDurationColumnChange={() => {}}
         onDurationUnitChange={() => {}}
         onStartTimeColumnChange={() => {}}
-        onTagsColumnChange={() => {}}
-        onServiceTagsColumnChange={() => {}}
-        onEventsColumnPrefixChange={() => {}}
+        onTagColumnPrefixChange={() => {}}
+        onServiceTagColumnPrefixChange={() => {}}
+        onExcludedTagColumnsChange={() => {}}
+        onExcludedServiceTagColumnsChange={() => {}}
+        onEventsColumnChange={() => {}}
       />
     );
     expect(result.container.firstChild).not.toBeNull();
@@ -206,9 +218,11 @@ describe('TracesConfig', () => {
         onDurationColumnChange={() => {}}
         onDurationUnitChange={() => {}}
         onStartTimeColumnChange={() => {}}
-        onTagsColumnChange={() => {}}
-        onServiceTagsColumnChange={() => {}}
-        onEventsColumnPrefixChange={() => {}}
+        onTagColumnPrefixChange={() => {}}
+        onServiceTagColumnPrefixChange={() => {}}
+        onExcludedTagColumnsChange={() => {}}
+        onExcludedServiceTagColumnsChange={() => {}}
+        onEventsColumnChange={() => {}}
       />
     );
     expect(result.container.firstChild).not.toBeNull();
@@ -238,9 +252,11 @@ describe('TracesConfig', () => {
         onDurationColumnChange={() => {}}
         onDurationUnitChange={() => {}}
         onStartTimeColumnChange={() => {}}
-        onTagsColumnChange={() => {}}
-        onServiceTagsColumnChange={() => {}}
-        onEventsColumnPrefixChange={() => {}}
+        onTagColumnPrefixChange={() => {}}
+        onServiceTagColumnPrefixChange={() => {}}
+        onExcludedTagColumnsChange={() => {}}
+        onExcludedServiceTagColumnsChange={() => {}}
+        onEventsColumnChange={() => {}}
       />
     );
     expect(result.container.firstChild).not.toBeNull();
@@ -270,9 +286,11 @@ describe('TracesConfig', () => {
         onDurationColumnChange={() => {}}
         onDurationUnitChange={() => {}}
         onStartTimeColumnChange={() => {}}
-        onTagsColumnChange={() => {}}
-        onServiceTagsColumnChange={() => {}}
-        onEventsColumnPrefixChange={() => {}}
+        onTagColumnPrefixChange={() => {}}
+        onServiceTagColumnPrefixChange={() => {}}
+        onExcludedTagColumnsChange={() => {}}
+        onExcludedServiceTagColumnsChange={() => {}}
+        onEventsColumnChange={() => {}}
       />
     );
     expect(result.container.firstChild).not.toBeNull();
@@ -302,9 +320,11 @@ describe('TracesConfig', () => {
         onDurationColumnChange={() => {}}
         onDurationUnitChange={() => {}}
         onStartTimeColumnChange={() => {}}
-        onTagsColumnChange={() => {}}
-        onServiceTagsColumnChange={() => {}}
-        onEventsColumnPrefixChange={() => {}}
+        onTagColumnPrefixChange={() => {}}
+        onServiceTagColumnPrefixChange={() => {}}
+        onExcludedTagColumnsChange={() => {}}
+        onExcludedServiceTagColumnsChange={() => {}}
+        onEventsColumnChange={() => {}}
       />
     );
     expect(result.container.firstChild).not.toBeNull();
@@ -334,9 +354,11 @@ describe('TracesConfig', () => {
         onDurationColumnChange={onDurationColumnChange}
         onDurationUnitChange={() => {}}
         onStartTimeColumnChange={() => {}}
-        onTagsColumnChange={() => {}}
-        onServiceTagsColumnChange={() => {}}
-        onEventsColumnPrefixChange={() => {}}
+        onTagColumnPrefixChange={() => {}}
+        onServiceTagColumnPrefixChange={() => {}}
+        onExcludedTagColumnsChange={() => {}}
+        onExcludedServiceTagColumnsChange={() => {}}
+        onEventsColumnChange={() => {}}
       />
     );
     expect(result.container.firstChild).not.toBeNull();
@@ -366,9 +388,11 @@ describe('TracesConfig', () => {
         onDurationColumnChange={() => {}}
         onDurationUnitChange={onDurationUnitChange}
         onStartTimeColumnChange={() => {}}
-        onTagsColumnChange={() => {}}
-        onServiceTagsColumnChange={() => {}}
-        onEventsColumnPrefixChange={() => {}}
+        onTagColumnPrefixChange={() => {}}
+        onServiceTagColumnPrefixChange={() => {}}
+        onExcludedTagColumnsChange={() => {}}
+        onExcludedServiceTagColumnsChange={() => {}}
+        onEventsColumnChange={() => {}}
       />
     );
     expect(result.container.firstChild).not.toBeNull();
@@ -398,9 +422,11 @@ describe('TracesConfig', () => {
         onDurationColumnChange={() => {}}
         onDurationUnitChange={() => {}}
         onStartTimeColumnChange={onStartTimeColumnChange}
-        onTagsColumnChange={() => {}}
-        onServiceTagsColumnChange={() => {}}
-        onEventsColumnPrefixChange={() => {}}
+        onTagColumnPrefixChange={() => {}}
+        onServiceTagColumnPrefixChange={() => {}}
+        onExcludedTagColumnsChange={() => {}}
+        onExcludedServiceTagColumnsChange={() => {}}
+        onEventsColumnChange={() => {}}
       />
     );
     expect(result.container.firstChild).not.toBeNull();
@@ -413,8 +439,8 @@ describe('TracesConfig', () => {
     expect(onStartTimeColumnChange).toHaveBeenCalledWith('changed');
   });
 
-  it('should call onTagsColumnChange when changed', () => {
-    const onTagsColumnChange = jest.fn();
+  it('should call onTagColumnPrefixChange when changed', () => {
+    const onTagColumnPrefixChange = jest.fn();
     const result = render(
       <TracesConfig
         tracesConfig={{}}
@@ -430,9 +456,11 @@ describe('TracesConfig', () => {
         onDurationColumnChange={() => {}}
         onDurationUnitChange={() => {}}
         onStartTimeColumnChange={() => {}}
-        onTagsColumnChange={onTagsColumnChange}
-        onServiceTagsColumnChange={() => {}}
-        onEventsColumnPrefixChange={() => {}}
+        onTagColumnPrefixChange={onTagColumnPrefixChange}
+        onServiceTagColumnPrefixChange={() => {}}
+        onExcludedTagColumnsChange={() => {}}
+        onExcludedServiceTagColumnsChange={() => {}}
+        onEventsColumnChange={() => {}}
       />
     );
     expect(result.container.firstChild).not.toBeNull();
@@ -441,12 +469,12 @@ describe('TracesConfig', () => {
     expect(input).toBeInTheDocument();
     fireEvent.change(input, { target: { value: 'changed' } });
     fireEvent.blur(input);
-    expect(onTagsColumnChange).toHaveBeenCalledTimes(1);
-    expect(onTagsColumnChange).toHaveBeenCalledWith('changed');
+    expect(onTagColumnPrefixChange).toHaveBeenCalledTimes(1);
+    expect(onTagColumnPrefixChange).toHaveBeenCalledWith('changed');
   });
 
-  it('should call onServiceTagsColumnChange when changed', () => {
-    const onServiceTagsColumnChange = jest.fn();
+  it('should call onServiceTagColumnPrefixChange when changed', () => {
+    const onServiceTagColumnPrefixChange = jest.fn();
     const result = render(
       <TracesConfig
         tracesConfig={{}}
@@ -462,9 +490,11 @@ describe('TracesConfig', () => {
         onDurationColumnChange={() => {}}
         onDurationUnitChange={() => {}}
         onStartTimeColumnChange={() => {}}
-        onTagsColumnChange={() => {}}
-        onServiceTagsColumnChange={onServiceTagsColumnChange}
-        onEventsColumnPrefixChange={() => {}}
+        onTagColumnPrefixChange={() => {}}
+        onServiceTagColumnPrefixChange={onServiceTagColumnPrefixChange}
+        onExcludedTagColumnsChange={() => {}}
+        onExcludedServiceTagColumnsChange={() => {}}
+        onEventsColumnChange={() => {}}
       />
     );
     expect(result.container.firstChild).not.toBeNull();
@@ -473,7 +503,7 @@ describe('TracesConfig', () => {
     expect(input).toBeInTheDocument();
     fireEvent.change(input, { target: { value: 'changed' } });
     fireEvent.blur(input);
-    expect(onServiceTagsColumnChange).toHaveBeenCalledTimes(1);
-    expect(onServiceTagsColumnChange).toHaveBeenCalledWith('changed');
+    expect(onServiceTagColumnPrefixChange).toHaveBeenCalledTimes(1);
+    expect(onServiceTagColumnPrefixChange).toHaveBeenCalledWith('changed');
   });
 });

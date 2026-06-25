@@ -1,6 +1,6 @@
 {
   "name": "greptime-datasource",
-  "version": "2.1.4-seamlezz.2",
+  "version": "2.1.4-seamlezz.3",
   "description": "GreptimeDB Datasource",
   "engines": {
     "node": ">=20"
