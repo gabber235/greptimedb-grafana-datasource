@@ -151,8 +151,9 @@ export const transformQueryResponseWithTraceAndLogLinks = (datasource: Datasourc
 
       traceIdQuery.builderOptions = {
         ...originalQuery.builderOptions,
-        filters: [], // Clear filters and orderBy since it's an exact ID lookup
+        filters: [],
         orderBy: [],
+        limit: undefined,
         meta: {
           ...originalQuery.builderOptions.meta,
           minimized: true,
@@ -265,11 +266,6 @@ export const transformQueryResponseWithTraceAndLogLinks = (datasource: Datasourc
         query: traceIdQuery,
         datasourceUid: traceIdQuery.datasource?.uid!,
         datasourceName: traceIdQuery.datasource?.type!,
-        panelsState: {
-          trace: {
-            spanId: '${__value.raw}'
-          }
-        }
       }
     });
     traceField.config.links!.push({

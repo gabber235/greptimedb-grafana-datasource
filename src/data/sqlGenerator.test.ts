@@ -26,8 +26,8 @@ describe('SQL Generator', () => {
     };
 
     const expectedSqlParts = [
-      'SELECT a, b, c FROM "default"."sample"',
-      'WHERE ( b IS NOT NULL ) LIMIT 1000'
+      'SELECT "a", "b", "c" FROM "default"."sample"',
+      'WHERE ( "b" IS NOT NULL ) LIMIT 1000'
     ];
 
     const sql = generateSql(opts);
@@ -63,8 +63,8 @@ describe('SQL Generator', () => {
     };
 
     const expectedSqlParts = [
-      'SELECT a, b, c, count(*) as d FROM "default"."sample"',
-      'WHERE ( b IS NOT NULL ) GROUP BY a LIMIT 1000'
+      'SELECT "a", "b", "c", count(*) as d FROM "default"."sample"',
+      'WHERE ( "b" IS NOT NULL ) GROUP BY a LIMIT 1000'
     ];
 
     const sql = generateSql(opts);
@@ -274,8 +274,8 @@ describe('SQL Generator', () => {
       orderBy: [{ name: '', hint: ColumnHint.Time, dir: OrderByDirection.ASC }]
     };
     const expectedSqlParts = [
-      'SELECT time_field as "time", number_field',
-      'FROM "default"."time_data" WHERE ( number_field > 0 )',
+      'SELECT "time_field" as "time", "number_field"',
+      'FROM "default"."time_data" WHERE ( "number_field" > 0 )',
       'ORDER BY time ASC LIMIT 100'
     ];
 
@@ -307,9 +307,9 @@ describe('SQL Generator', () => {
       orderBy: [{ name: '', hint: ColumnHint.Time, dir: OrderByDirection.ASC }]
     };
     const expectedSqlParts = [
-      'SELECT time_field as "time", number_field, sum(number_field) as total',
-      'FROM "default"."time_data" WHERE ( number_field > 0 )',
-      'GROUP BY time ORDER BY time ASC LIMIT 100'
+      'SELECT "time_field" as "time", "number_field", sum(number_field) as total',
+      'FROM "default"."time_data" WHERE ( "number_field" > 0 )',
+      'GROUP BY time_field ORDER BY time ASC LIMIT 100'
     ];
 
     const sql = generateSql(opts);
@@ -332,8 +332,13 @@ describe('SQL Generator', () => {
         { name: 'SpanAttributes', type: 'Map(LowCardinality(String), String)', hint: ColumnHint.TraceTags },
         { name: 'ResourceAttributes', type: 'Map(LowCardinality(String), String)', hint: ColumnHint.TraceServiceTags },
         { name: 'StatusCode', type: 'LowCardinality(String)', hint: ColumnHint.TraceStatusCode },
+        { name: 'StatusMessage', type: 'String', hint: ColumnHint.TraceStatusMessage },
       ],
-      filters: [],
+      filters: [
+        { condition: 'AND', filterType: 'custom', hint: ColumnHint.Time, key: '', operator: FilterOperator.WithInGrafanaTimeRange, type: 'datetime' },
+        { condition: 'AND', filterType: 'custom', hint: ColumnHint.TraceParentSpanId, key: '', operator: FilterOperator.IsEmpty, type: 'string', value: '' },
+        { condition: 'AND', filterType: 'custom', hint: ColumnHint.TraceServiceName, key: '', operator: FilterOperator.Equals, type: 'string', value: 'ignored' },
+      ],
       meta: {
         minimized: true,
         otelEnabled: false,
@@ -347,14 +352,10 @@ describe('SQL Generator', () => {
     };
     const expectedSqlParts = [
       'SELECT "TraceId" as traceID, "SpanId" as spanID, "ParentSpanId" as parentSpanID,',
-      '"ServiceName" as serviceName, "SpanName" as operationName, multiply(toUnixTimestamp64Nano("Timestamp"), 0.000001) as startTime,',
-      'multiply("Duration", 0.000001) as duration,',
-      `arrayMap(key -> map('key', key, 'value',"SpanAttributes"[key]),`,
-      `mapKeys("SpanAttributes")) as tags,`,
-      `arrayMap(key -> map('key', key, 'value',"ResourceAttributes"[key]), mapKeys("ResourceAttributes")) as serviceTags,`,
-      `if("StatusCode" IN ('Error', 'STATUS_CODE_ERROR'), 2, 0) as statusCode`,
-      `FROM "default"."otel_traces" WHERE traceID = 'abcdefg'`,
-      'LIMIT 1000'
+      '"ServiceName" as serviceName, "SpanName" as operationName, CAST(to_unixtime("Timestamp") * 1000 AS BIGINT) as startTime,',
+      '"Duration" * 0.000001 AS duration, "SpanAttributes", "ResourceAttributes",',
+      `CASE WHEN LOWER("StatusCode") IN ('error', 'status_code_error') THEN 2 WHEN LOWER("StatusCode") IN ('ok', 'status_code_ok') THEN 1 ELSE 0 END as statusCode,`,
+      `"StatusMessage" as statusMessage FROM "default"."otel_traces" WHERE "TraceId" = 'abcdefg'`
     ];
 
     const sql = generateSql(opts);
@@ -394,14 +395,10 @@ describe('SQL Generator', () => {
       `WITH 'abcdefg' as trace_id, (SELECT min(Start) FROM "default"."otel_traces_trace_id_ts" WHERE TraceId = trace_id) as trace_start,`,
       `(SELECT max(End) + 1 FROM "default"."otel_traces_trace_id_ts" WHERE TraceId = trace_id) as trace_end`,
       'SELECT "TraceId" as traceID, "SpanId" as spanID, "ParentSpanId" as parentSpanID,',
-      '"ServiceName" as serviceName, "SpanName" as operationName, multiply(toUnixTimestamp64Nano("Timestamp"), 0.000001) as startTime,',
-      'multiply("Duration", 0.000001) as duration,',
-      `arrayMap(key -> map('key', key, 'value',"SpanAttributes"[key]),`,
-      `mapKeys("SpanAttributes")) as tags,`,
-      `arrayMap(key -> map('key', key, 'value',"ResourceAttributes"[key]), mapKeys("ResourceAttributes")) as serviceTags,`,
-      `if("StatusCode" IN ('Error', 'STATUS_CODE_ERROR'), 2, 0) as statusCode`,
-      `FROM "default"."otel_traces" WHERE traceID = trace_id AND "Timestamp" >= trace_start AND "Timestamp" <= trace_end`,
-      'LIMIT 1000'
+      '"ServiceName" as serviceName, "SpanName" as operationName, CAST(to_unixtime("Timestamp") * 1000 AS BIGINT) as startTime,',
+      '"Duration" * 0.000001 AS duration, "SpanAttributes", "ResourceAttributes",',
+      `CASE WHEN LOWER("StatusCode") IN ('error', 'status_code_error') THEN 2 WHEN LOWER("StatusCode") IN ('ok', 'status_code_ok') THEN 1 ELSE 0 END as statusCode`,
+      `FROM "default"."otel_traces" WHERE traceID = trace_id AND "Timestamp" >= trace_start AND "Timestamp" <= trace_end`
     ];
 
     const sql = generateSql(opts);
@@ -474,9 +471,9 @@ describe('SQL Generator', () => {
     };
     const expectedSqlParts = [
       'SELECT "TraceId" as traceID, "ServiceName" as serviceName, "SpanName" as operationName,',
-      '"Timestamp" as startTime, multiply("Duration", 0.000001) as duration',
-      'FROM "default"."otel_traces" WHERE ( Timestamp >= $__fromTime AND Timestamp <= $__toTime )',
-      'AND ( ParentSpanId = \'\' ) AND ( Duration > 0 ) ORDER BY Timestamp DESC, Duration DESC LIMIT 1000'
+      '"Timestamp" as startTime, "Duration" * 0.000001 AS duration',
+      'FROM "default"."otel_traces" WHERE ( "Timestamp" >= $__fromTime AND "Timestamp" <= $__toTime )',
+      'AND ( "ParentSpanId" = \'\' ) AND ( "Duration" > 0 ) ORDER BY "Timestamp" DESC, "Duration" DESC LIMIT 1000'
     ];
 
     const sql = generateSql(opts);
@@ -541,10 +538,10 @@ describe('getColumnIdentifier', () => {
   const cases: Array<{ input: SelectedColumn, expected: string }> = [
     { input: { name: '' }, expected: `` },
     { input: { name: ' ' }, expected: `" "` },
-    { input: { name: 'test' }, expected: `test` },
+    { input: { name: 'test' }, expected: `"test"` },
     { input: { name: 'test with space' }, expected: `"test with space"` },
     { input: { name: 'test with alias', alias: 'a' }, expected: `"test with alias" as "a"` },
-    { input: { name: 'test_with_alias', alias: 'b' }, expected: `test_with_alias as "b"` },
+    { input: { name: 'test_with_alias', alias: 'b' }, expected: `"test_with_alias" as "b"` },
     { input: { name: '"test" as a', alias: '' }, expected: `"test" as a` },
   ];
 
@@ -707,7 +704,7 @@ describe('getFilters', () => {
       ]
     } as QueryBuilderOptions;
     const sql = _testExports.getFilters(options);
-    const expectedSql = `( col IN ('1', (2), '3', 'some string', 'another string', someFunction(123), "column reference") )`;
+    const expectedSql = `( "col" IN ('1', (2), '3', 'some string', 'another string', someFunction(123), "column reference") )`;
     expect(sql).toEqual(expectedSql);
   });
 
@@ -750,7 +747,7 @@ describe('getFilters', () => {
       ]
     } as QueryBuilderOptions;
     const sql = _testExports.getFilters(options);
-    const expectedSql = '( hinted >= $__fromTime AND hinted <= $__toTime ) AND ( text = \'\' ) AND ( volume > 0 )';
+    const expectedSql = '( "hinted" >= $__fromTime AND "hinted" <= $__toTime ) AND ( "text" = \'\' ) AND ( "volume" > 0 )';
     expect(sql).toEqual(expectedSql);
   });
 });

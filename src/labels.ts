@@ -446,6 +446,7 @@ export default {
       [ColumnHint.TraceTags]: 'Tags',
       [ColumnHint.TraceServiceTags]: 'Service Tags',
       [ColumnHint.TraceStatusCode]: 'Status Code',
+      [ColumnHint.TraceStatusMessage]: 'Status Message',
       [ColumnHint.TraceEventsPrefix]: 'Events JSON Column',
     }
   }

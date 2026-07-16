@@ -100,6 +100,8 @@ export interface CHTracesConfig {
   excludedTagColumns?: string[];
   excludedServiceTagColumns?: string[];
   eventsColumn?: string;
+  statusCodeColumn?: string;
+  statusMessageColumn?: string;
 }
 
 export interface AliasTableEntry {

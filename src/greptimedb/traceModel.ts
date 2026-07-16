@@ -2,12 +2,14 @@ export const GREPTIME_TRACE_DEFAULTS = {
   tagColumnPrefix: 'span_attributes.',
   serviceTagColumnPrefix: 'resource_attributes.',
   eventsColumn: 'span_events',
+  statusCodeColumn: 'span_status_code',
+  statusMessageColumn: 'span_status_message',
 } as const;
 
 export type GreptimeSpanEvent = {
   name?: string;
-  time?: string;
-  timestamp?: string;
+  time?: string | number;
+  timestamp?: string | number;
   attributes?: Record<string, unknown>;
 };
 

@@ -1,6 +1,6 @@
 import { FieldType } from '@grafana/data';
-import { QueryType } from 'types/queryBuilder';
-import { transformGreptimeResponse } from './index';
+import { ColumnHint, QueryType } from 'types/queryBuilder';
+import { transformGreptimeDBTraceDetails, transformGreptimeResponse } from './index';
 
 const response = (columnSchemas: Array<{ name: string; data_type: string }>, rows: any[][]) => ({
   code: 0,
@@ -156,5 +156,69 @@ describe('GreptimeDB response transformation', () => {
     expect(frames).toHaveLength(1);
     expect(frames[0].fields[0].name).toBe('Error');
     expect(frames[0].fields[0].values[0]).toContain('exactly one time column');
+  });
+
+  it('builds trace hierarchy and normalizes native trace fields', () => {
+    const schemas = [
+      { name: 'trace_id', data_type: 'String' },
+      { name: 'span_id', data_type: 'String' },
+      { name: 'parent_span_id', data_type: 'String' },
+      { name: 'service_name', data_type: 'String' },
+      { name: 'resource_attributes.service.namespace', data_type: 'String' },
+      { name: 'span_name', data_type: 'String' },
+      { name: 'timestamp', data_type: 'TimestampNanosecond' },
+      { name: 'duration_nano', data_type: 'UInt64' },
+      { name: 'span_status_code', data_type: 'String' },
+      { name: 'span_status_message', data_type: 'String' },
+      { name: 'span_attributes.http.method', data_type: 'String' },
+      { name: 'resource_attributes.deployment.environment', data_type: 'String' },
+      { name: 'span_events', data_type: 'Json' },
+    ];
+    const decodedEvents = [{ time: 1_700_000_000_123_000, name: 'decoded', attributes: { count: 2 } }];
+    const serializedEvents = JSON.stringify([{ timestamp: 1_700_000_000_124_000_000, name: 'serialized' }, { timestamp: 'invalid' }, null]);
+    const frame = transformGreptimeDBTraceDetails(
+      response(schemas, [
+        ['trace', 'root', '', 'api', 'prod', 'root operation', 1_700_000_000_000_000_000, 2_500_000, 'STATUS_CODE_OK', '', 'GET', 'production', decodedEvents],
+        ['trace', 'child', 'root', 'db', '', 'child operation', 1_700_000_001_000_000_000, 1_000_000, 'error', 'failed', null, 'production', serializedEvents],
+      ]),
+      {
+        database: 'public', table: 'traces', queryType: QueryType.Traces,
+        columns: [
+          { name: 'span_attributes.http.method', hint: ColumnHint.TraceTags },
+          { name: 'resource_attributes.deployment.environment', hint: ColumnHint.TraceServiceTags },
+          { name: 'span_events', hint: ColumnHint.TraceEventsPrefix },
+        ],
+      }
+    )[0];
+    const values = (name: string) => frame.fields.find((field) => field.name === name)!.values;
+
+    expect(values('parentSpanID')).toEqual([undefined, 'root']);
+    expect(values('serviceName')).toEqual(['prod.api', 'db']);
+    expect(values('startTime')).toEqual([1_700_000_000_000, 1_700_000_001_000]);
+    expect(values('duration')).toEqual([2.5, 1]);
+    expect(values('statusCode')).toEqual([1, 2]);
+    expect(values('statusMessage')).toEqual([undefined, 'failed']);
+    expect(values('tags')[0]).toEqual([{ key: 'http.method', value: 'GET' }]);
+    expect(values('serviceTags')[0]).toEqual([{ key: 'deployment.environment', value: 'production' }]);
+    expect(values('logs')[0][0].timestamp).toBe(1_700_000_000_123);
+    expect(values('logs')[1]).toHaveLength(1);
+    expect(values('logs')[1][0].timestamp).toBe(1_700_000_000_124);
+  });
+
+  it('uses generated duration without converting it twice and ignores malformed events', () => {
+    const frame = transformGreptimeDBTraceDetails(
+      response(
+        [
+          { name: 'traceID', data_type: 'String' }, { name: 'spanID', data_type: 'String' },
+          { name: 'startTime', data_type: 'Int64' }, { name: 'duration', data_type: 'Float64' },
+          { name: 'logs', data_type: 'String' },
+        ],
+        [['trace', 'span', 1_700_000_000_000, 2.5, '{malformed']]
+      ),
+      { database: 'public', table: 'traces', queryType: QueryType.Traces, columns: [] }
+    )[0];
+
+    expect(frame.fields.find((field) => field.name === 'duration')!.values).toEqual([2.5]);
+    expect(frame.fields.find((field) => field.name === 'logs')!.values).toEqual([[]]);
   });
 });

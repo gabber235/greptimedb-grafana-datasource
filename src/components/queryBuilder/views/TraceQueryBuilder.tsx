@@ -40,6 +40,8 @@ interface TraceQueryBuilderState {
   tagsColumn: SelectedColumn[];
   serviceTagsColumn?: SelectedColumn[];
   eventsColumnPrefix?: SelectedColumn;
+  statusCodeColumn?: SelectedColumn;
+  statusMessageColumn?: SelectedColumn;
   traceId: string;
   orderBy: OrderBy[];
   limit: number;
@@ -69,6 +71,8 @@ export const TraceQueryBuilder = (props: TraceQueryBuilderProps) => {
     tagsColumn: getColumnsByHint(builderOptions, ColumnHint.TraceTags) || [],
     serviceTagsColumn: getColumnsByHint(builderOptions, ColumnHint.TraceServiceTags)  || [],
     eventsColumnPrefix: getColumnByHint(builderOptions, ColumnHint.TraceEventsPrefix),
+    statusCodeColumn: getColumnByHint(builderOptions, ColumnHint.TraceStatusCode),
+    statusMessageColumn: getColumnByHint(builderOptions, ColumnHint.TraceStatusMessage),
     traceId: builderOptions.meta?.traceId || '',
     orderBy: builderOptions.orderBy || [],
     limit: builderOptions.limit || 0,
@@ -86,14 +90,16 @@ export const TraceQueryBuilder = (props: TraceQueryBuilderProps) => {
       next.durationTimeColumn,
       ...(next.tagsColumn ?? []),
       ...(next.serviceTagsColumn ?? []),
-      next.eventsColumnPrefix
+      next.eventsColumnPrefix,
+      next.statusCodeColumn,
+      next.statusMessageColumn,
     ].filter(c => c !== undefined) as SelectedColumn[];
 
     builderOptionsDispatch(setOptions({
       columns: nextColumns,
       orderBy: next.orderBy,
       limit: next.limit,
-      filters: next.filters,
+      filters: next.isTraceIdMode && !builderState.isTraceIdMode ? [] : next.filters,
       meta: {
         isTraceIdMode: next.isTraceIdMode,
         traceDurationUnit: next.durationUnit,

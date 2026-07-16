@@ -171,6 +171,14 @@ describe('transformQueryResponseWithTraceAndLogLinks', () => {
     const links = out?.data[0]?.fields[0]?.config?.links;
     expect(links).not.toBeUndefined();
     expect(links).toHaveLength(2);
+    expect(links?.map((link: { title: string }) => link.title)).toEqual(['View trace', 'View logs']);
+    expect(links?.[0].internal).toEqual(expect.objectContaining({
+      query: expect.objectContaining({
+        refId: 'Trace ID',
+        builderOptions: expect.objectContaining({ filters: [], orderBy: [], limit: undefined }),
+      }),
+    }));
+    expect(links?.[0].internal).not.toHaveProperty('panelsState');
     expect(getDefaultTraceDatabase).not.toHaveBeenCalled();
     expect(getDefaultTraceTable).not.toHaveBeenCalled();
     expect(getDefaultTraceColumns).not.toHaveBeenCalled();

@@ -234,7 +234,8 @@ interface GrafanaTraceSpan {
   tags?: Array<Record<string, any>>;
   serviceTags?: Array<Record<string, any>>;
   logs?: GrafanaTraceLog[];
-  // Add other relevant fields as needed (kind, status, etc.)
+  statusCode?: number;
+  statusMessage?: string;
 }
 
 export type Column = {
@@ -248,7 +249,8 @@ export function transformGreptimeDBTraceDetails(response: GreptimeResponse, buil
     return [];
   }
 
-  const columnNames = records.schema.column_schemas.map((column) => column.name);
+  const columnSchemas = records.schema.column_schemas;
+  const columnNames = columnSchemas.map((column) => column.name);
   const columnIndexByName = new Map(columnNames.map((name, index) => [name, index]));
   const tagColumnPrefix = normalizeTraceColumnPrefix(undefined, GREPTIME_TRACE_DEFAULTS.tagColumnPrefix);
   const serviceTagColumnPrefix = normalizeTraceColumnPrefix(undefined, GREPTIME_TRACE_DEFAULTS.serviceTagColumnPrefix);
@@ -269,18 +271,26 @@ export function transformGreptimeDBTraceDetails(response: GreptimeResponse, buil
     const tags = getTraceTags(row, columnIndexByName, tagColumnNames, tagColumnPrefix);
     const serviceTags = getTraceTags(row, columnIndexByName, serviceTagColumnNames, serviceTagColumnPrefix);
     const spanEvents = getTraceValue(data, 'logs', eventColumnName, GREPTIME_TRACE_DEFAULTS.eventsColumn);
+    const storedServiceName = getTraceValue(data, 'serviceName', 'service_name') || 'unknown';
+    const serviceNamespace = getTraceValue(data, 'resource_attributes.service.namespace');
+    const startTimeColumn = findTraceColumn(columnSchemas, 'startTime', 'timestamp');
+    const hasGeneratedDuration = columnIndexByName.has('duration');
 
     return {
       traceId: getTraceValue(data, 'traceID', 'trace_id'),
       spanId: getTraceValue(data, 'spanID', 'span_id'),
       parentSpanId: getTraceValue(data, 'parentSpanID', 'parent_span_id') || undefined,
       operationName: getTraceValue(data, 'operationName', 'span_name') || 'unknown',
-      serviceName: getTraceValue(data, 'serviceName', 'service_name') || 'unknown',
-      startTime: getTraceStartTime(getTraceValue(data, 'startTime', 'timestamp')),
-      duration: getTraceValue(data, 'duration', 'duration_nano') || 0,
+      serviceName: serviceNamespace ? `${serviceNamespace}.${storedServiceName}` : storedServiceName,
+      startTime: getTraceStartTime(getTraceValue(data, 'startTime', 'timestamp'), startTimeColumn?.data_type),
+      duration: hasGeneratedDuration
+        ? getTraceValue(data, 'duration') || 0
+        : (getTraceValue(data, 'duration_nano') || 0) / 1_000_000,
       tags,
       serviceTags,
       logs: transformGreptimeDBEvents(parseGreptimeSpanEvents(spanEvents)),
+      statusCode: getTraceStatusCode(getTraceValue(data, 'statusCode', 'span_status_code')),
+      statusMessage: getTraceValue(data, 'statusMessage', 'span_status_message') || undefined,
     };
   });
 
@@ -295,6 +305,8 @@ export function transformGreptimeDBTraceDetails(response: GreptimeResponse, buil
     { name: 'tags', type: FieldType.other, values: spans.map(s => s.tags) },
     { name: 'serviceTags', type: FieldType.other, values: spans.map(s => s.serviceTags) },
     { name: 'logs', type: FieldType.other, values: spans.map(s => s.logs) },
+    { name: 'statusCode', type: FieldType.number, values: spans.map(s => s.statusCode) },
+    { name: 'statusMessage', type: FieldType.string, values: spans.map(s => s.statusMessage) },
   ];
 
   const frame = createDataFrame({
@@ -324,12 +336,51 @@ function getTraceValue(data: Record<string, any>, ...names: string[]): any {
   return undefined;
 }
 
-function getTraceStartTime(value: any): number {
+function findTraceColumn(columns: GreptimeColumnSchema[], ...names: string[]): GreptimeColumnSchema | undefined {
+  const normalizedNames = new Set(names.map((name) => name.toLowerCase()));
+  return columns.find((column) => normalizedNames.has(column.name.toLowerCase()));
+}
+
+function getTraceStartTime(value: unknown, dataType?: string): number {
+  if (typeof value === 'number' && dataType?.toLowerCase().includes('timestamp')) {
+    return toMs(value, dataType as GreptimeTimeType);
+  }
+
+  if (typeof value === 'number') {
+    return normalizeEpochMilliseconds(value);
+  }
+
+  return new Date(value as string).getTime();
+}
+
+function normalizeEpochMilliseconds(value: number): number {
+  const magnitude = Math.abs(value);
+  if (magnitude >= 1e17) {
+    return value / 1_000_000;
+  }
+
+  if (magnitude >= 1e14) {
+    return value / 1_000;
+  }
+
+  return value;
+}
+
+function getTraceStatusCode(value: unknown): number {
   if (typeof value === 'number') {
     return value;
   }
 
-  return new Date(value).getTime();
+  const normalizedValue = typeof value === 'string' ? value.toLowerCase() : '';
+  if (normalizedValue === 'error' || normalizedValue === 'status_code_error') {
+    return 2;
+  }
+
+  if (normalizedValue === 'ok' || normalizedValue === 'status_code_ok') {
+    return 1;
+  }
+
+  return 0;
 }
 
 function getTraceTags(row: any[], columnIndexByName: Map<string, number>, columnNames: string[], prefix: string): Array<{ key: string; value: string }> {
@@ -371,7 +422,11 @@ function parseGreptimeSpanEvents(value: unknown): GreptimeSpanEvent[] {
 
 function transformGreptimeDBEvents(events: GreptimeSpanEvent[]): GrafanaTraceLog[] {
   return events.flatMap((event) => {
-    const timestamp = getTraceStartTime(event.time || event.timestamp);
+    if (!event || typeof event !== 'object') {
+      return [];
+    }
+
+    const timestamp = getTraceStartTime(event.time ?? event.timestamp);
     if (!Number.isFinite(timestamp)) {
       return [];
     }

@@ -110,7 +110,7 @@ describe('ClickHouseDatasource', () => {
 
       const keys = await ds.getTagKeys();
       expect(spyOnReplace).toHaveBeenCalled();
-      const expected = { rawSql: 'SELECT name, type, table FROM system.columns' };
+      const expected = { rawSql: 'SELECT column_name AS name, greptime_data_type AS type, table_name AS table FROM INFORMATION_SCHEMA.COLUMNS' };
 
       expect(spyOnQuery).toHaveBeenCalledWith(
         expect.objectContaining({ targets: expect.arrayContaining([expect.objectContaining(expected)]) })
@@ -127,7 +127,7 @@ describe('ClickHouseDatasource', () => {
 
       const keys = await ds.getTagKeys();
       expect(spyOnReplace).toHaveBeenCalled();
-      const expected = { rawSql: "SELECT name, type, table FROM system.columns WHERE database IN ('foo')" };
+      const expected = { rawSql: "SELECT column_name AS name, greptime_data_type AS type, table_name AS table FROM INFORMATION_SCHEMA.COLUMNS WHERE table_schema IN ('foo')" };
 
       expect(spyOnQuery).toHaveBeenCalledWith(
         expect.objectContaining({ targets: expect.arrayContaining([expect.objectContaining(expected)]) })
@@ -547,5 +547,22 @@ describe('ClickHouseDatasource', () => {
         );
       });
     });
+  });
+
+  it('discovers native status columns independently of wildcard tag selection', () => {
+    const datasource = cloneDeep(mockDatasource);
+    datasource.settings.jsonData.traces = {
+      tagColumnPrefix: 'disabled_tags.',
+      serviceTagColumnPrefix: 'disabled_resource_tags.',
+    };
+
+    expect(datasource.getDefaultNativeTraceColumns([
+      { name: 'span_status_code', type: 'String', picklistValues: [] },
+      { name: 'span_status_message', type: 'String', picklistValues: [] },
+      { name: 'span_attributes.http.method', type: 'String', picklistValues: [] },
+    ])).toEqual([
+      { name: 'span_status_code', type: 'String', hint: ColumnHint.TraceStatusCode },
+      { name: 'span_status_message', type: 'String', hint: ColumnHint.TraceStatusMessage },
+    ]);
   });
 });

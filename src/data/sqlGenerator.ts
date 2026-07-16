@@ -92,7 +92,6 @@ const generateTraceSearchQuery = (options: QueryBuilderOptions): string => {
  * https://grafana.com/docs/grafana/latest/explore/trace-integration/#data-frame-structure
  */
 const generateTraceIdQuery = (options: QueryBuilderOptions): string => {
-  console.log('generateTraceIdQuery')
   const { database, table } = options;
 
   const queryParts: string[] = [];
@@ -152,7 +151,12 @@ const generateTraceIdQuery = (options: QueryBuilderOptions): string => {
 
   const traceStatusCode = getColumnByHint(options, ColumnHint.TraceStatusCode);
   if (traceStatusCode !== undefined) {
-    selectParts.push(`if(${escapeIdentifier(traceStatusCode.name)} IN ('Error', 'STATUS_CODE_ERROR'), 2, 0) as statusCode`);
+    const statusColumn = escapeIdentifier(traceStatusCode.name);
+    selectParts.push(`CASE WHEN LOWER(${statusColumn}) IN ('error', 'status_code_error') THEN 2 WHEN LOWER(${statusColumn}) IN ('ok', 'status_code_ok') THEN 1 ELSE 0 END as statusCode`);
+  }
+  const traceStatusMessage = getColumnByHint(options, ColumnHint.TraceStatusMessage);
+  if (traceStatusMessage !== undefined) {
+    selectParts.push(`${escapeIdentifier(traceStatusMessage.name)} as statusMessage`);
   }
   const traceEventsColumn = getColumnByHint(options, ColumnHint.TraceEventsPrefix);
   if (traceEventsColumn !== undefined) {
@@ -183,9 +187,7 @@ const generateTraceIdQuery = (options: QueryBuilderOptions): string => {
   queryParts.push('FROM');
   queryParts.push(getTableIdentifier(database, table));
 
-  const filterParts = getFilters(options);
-
-  if (hasTraceIdFilter || filterParts) {
+  if (hasTraceIdFilter) {
     queryParts.push('WHERE');
   }
 
@@ -196,27 +198,12 @@ const generateTraceIdQuery = (options: QueryBuilderOptions): string => {
     queryParts.push('AND');
     queryParts.push(`${escapeIdentifier(traceStartTime.name)} <= trace_end`);
   } else if (hasTraceIdFilter) {
-    const traceId = options.meta!.traceId;
-    queryParts.push(`trace_id = '${traceId}'`);
-  }
-
-  if (filterParts) {
-    if (hasTraceIdFilter) {
-      queryParts.push('AND');
+    const traceIdValue = options.meta!.traceId;
+    const traceIdColumn = getColumnByHint(options, ColumnHint.TraceId);
+    if (!traceIdColumn) {
+      throw new Error('Missing trace ID column for exact trace lookup');
     }
-
-    queryParts.push(filterParts);
-  }
-
-  const orderBy = getOrderBy(options);
-  if (orderBy) {
-    queryParts.push('ORDER BY');
-    queryParts.push(orderBy);
-  }
-
-  const limit = getLimit(options.limit);
-  if (limit !== '') {
-    queryParts.push(limit);
+    queryParts.push(`${escapeIdentifier(traceIdColumn.name)} = '${traceIdValue}'`);
   }
 
   return concatQueryParts(queryParts);
@@ -640,9 +627,9 @@ const getTraceDurationSelectSqlGreptimeDB = (columnIdentifier: string, timeUnit?
     case TimeUnit.Milliseconds:
       return `${columnIdentifier} AS ${alias}`;
     case TimeUnit.Microseconds:
-      return `FLOOR(${columnIdentifier}) * 0.001 AS ${alias}`;
+      return `${columnIdentifier} * 0.001 AS ${alias}`;
     case TimeUnit.Nanoseconds:
-      return `FLOOR(${columnIdentifier} * 0.000001) AS ${alias}`;
+      return `${columnIdentifier} * 0.000001 AS ${alias}`;
     default:
       return `${columnIdentifier} AS ${alias}`;
   }

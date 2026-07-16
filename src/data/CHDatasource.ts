@@ -616,11 +616,17 @@ export class Datasource
     const tagColumnPrefix = normalizeTraceColumnPrefix(traceConfig.tagColumnPrefix, GREPTIME_TRACE_DEFAULTS.tagColumnPrefix);
     const serviceTagColumnPrefix = normalizeTraceColumnPrefix(traceConfig.serviceTagColumnPrefix, GREPTIME_TRACE_DEFAULTS.serviceTagColumnPrefix);
     const eventsColumn = traceConfig.eventsColumn || GREPTIME_TRACE_DEFAULTS.eventsColumn;
+    const statusCodeColumn = traceConfig.statusCodeColumn || GREPTIME_TRACE_DEFAULTS.statusCodeColumn;
+    const statusMessageColumn = traceConfig.statusMessageColumn || GREPTIME_TRACE_DEFAULTS.statusMessageColumn;
 
     const selectedColumns: SelectedColumn[] = [];
 
     allColumns.forEach((column) => {
-      if (column.name === eventsColumn) {
+      if (column.name === statusCodeColumn) {
+        selectedColumns.push({ name: column.name, type: column.type, hint: ColumnHint.TraceStatusCode });
+      } else if (column.name === statusMessageColumn) {
+        selectedColumns.push({ name: column.name, type: column.type, hint: ColumnHint.TraceStatusMessage });
+      } else if (column.name === eventsColumn) {
         selectedColumns.push({ name: column.name, type: column.type, hint: ColumnHint.TraceEventsPrefix });
       } else if (column.name.startsWith(tagColumnPrefix) && !excludedTagColumns.has(column.name)) {
         selectedColumns.push({ name: column.name, type: column.type, hint: ColumnHint.TraceTags });
@@ -963,12 +969,17 @@ export class Datasource
           } else {
             builderOptions = target.builderOptions || {}
           }
-          const queryType = target.refId === 'Trace ID' ? 'Trace' : builderOptions.queryType || target.queryType
+          const queryType = editorType === EditorType.Builder
+            ? target.builderOptions.queryType
+            : target.queryType ?? target.meta?.builderOptions?.queryType;
+          const isTraceDetails = editorType === EditorType.Builder
+            ? target.builderOptions.meta?.isTraceIdMode === true
+            : queryType === QueryType.Traces || target.refId === 'Trace ID';
           if (queryType === QueryType.Logs) {
             const contextColumns = this.getLogContextColumnNames()
             const logFrame = transformGreptimeDBLogs(greptimeData, target, contextColumns) as DataFrame
             return logFrame? [logFrame] : []
-          } else if (queryType === 'Trace') {
+          } else if (isTraceDetails) {
             const frames = transformGreptimeDBTraceDetails(greptimeData, builderOptions as QueryBuilderOptions)
             
             return frames;
