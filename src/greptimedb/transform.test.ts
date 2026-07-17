@@ -179,7 +179,7 @@ describe('GreptimeDB response transformation', () => {
     const frame = transformGreptimeDBTraceDetails(
       response(schemas, [
         ['trace', 'root', '', 'api', 'prod', 'root operation', 1_700_000_000_000_000_000, 2_500_000, 'STATUS_CODE_OK', '', 'GET', 'production', decodedEvents],
-        ['trace', 'child', 'root', 'db', '', 'child operation', 1_700_000_001_000_000_000, 1_000_000, 'error', 'failed', null, 'production', serializedEvents],
+        ['trace', 'child', 'root', 'db', '', 'child operation', 1_700_000_000_500_000_000, 1_000_000, 'error', 'failed', null, 'production', serializedEvents],
       ]),
       {
         database: 'public', table: 'traces', queryType: QueryType.Traces,
@@ -194,7 +194,7 @@ describe('GreptimeDB response transformation', () => {
 
     expect(values('parentSpanID')).toEqual([undefined, 'root']);
     expect(values('serviceName')).toEqual(['prod.api', 'db']);
-    expect(values('startTime')).toEqual([1_700_000_000_000, 1_700_000_001_000]);
+    expect(values('startTime')).toEqual([1_700_000_000_000, 1_700_000_000_500]);
     expect(values('duration')).toEqual([2.5, 1]);
     expect(values('statusCode')).toEqual([1, 2]);
     expect(values('statusMessage')).toEqual([undefined, 'failed']);

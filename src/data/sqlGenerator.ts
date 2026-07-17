@@ -125,7 +125,7 @@ const generateTraceIdQuery = (options: QueryBuilderOptions): string => {
 
   const traceStartTime = getColumnByHint(options, ColumnHint.Time);
   if (traceStartTime !== undefined) {
-    selectParts.push(`${convertTimeFieldToMilliseconds(escapeIdentifier(traceStartTime.name))} as startTime`);
+    selectParts.push(`${escapeIdentifier(traceStartTime.name)} as startTime`);
   }
 
   const traceDurationTime = getColumnByHint(options, ColumnHint.TraceDurationTime);
@@ -634,10 +634,6 @@ const getTraceDurationSelectSqlGreptimeDB = (columnIdentifier: string, timeUnit?
       return `${columnIdentifier} AS ${alias}`;
   }
 };
-/** Returns the input time field converted to a Unix timestamp in nanoseconds and then adjusted to milliseconds. */
-
-const convertTimeFieldToMilliseconds = (columnIdentifier: string) =>
-  `CAST(to_unixtime(${columnIdentifier}) * 1000 AS BIGINT)`;
 /**
  * Concatenates query parts with no empty spaces.
  */

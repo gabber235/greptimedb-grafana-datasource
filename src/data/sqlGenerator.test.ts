@@ -352,7 +352,7 @@ describe('SQL Generator', () => {
     };
     const expectedSqlParts = [
       'SELECT "TraceId" as traceID, "SpanId" as spanID, "ParentSpanId" as parentSpanID,',
-      '"ServiceName" as serviceName, "SpanName" as operationName, CAST(to_unixtime("Timestamp") * 1000 AS BIGINT) as startTime,',
+      '"ServiceName" as serviceName, "SpanName" as operationName, "Timestamp" as startTime,',
       '"Duration" * 0.000001 AS duration, "SpanAttributes", "ResourceAttributes",',
       `CASE WHEN LOWER("StatusCode") IN ('error', 'status_code_error') THEN 2 WHEN LOWER("StatusCode") IN ('ok', 'status_code_ok') THEN 1 ELSE 0 END as statusCode,`,
       `"StatusMessage" as statusMessage FROM "default"."otel_traces" WHERE "TraceId" = 'abcdefg'`
@@ -395,7 +395,7 @@ describe('SQL Generator', () => {
       `WITH 'abcdefg' as trace_id, (SELECT min(Start) FROM "default"."otel_traces_trace_id_ts" WHERE TraceId = trace_id) as trace_start,`,
       `(SELECT max(End) + 1 FROM "default"."otel_traces_trace_id_ts" WHERE TraceId = trace_id) as trace_end`,
       'SELECT "TraceId" as traceID, "SpanId" as spanID, "ParentSpanId" as parentSpanID,',
-      '"ServiceName" as serviceName, "SpanName" as operationName, CAST(to_unixtime("Timestamp") * 1000 AS BIGINT) as startTime,',
+      '"ServiceName" as serviceName, "SpanName" as operationName, "Timestamp" as startTime,',
       '"Duration" * 0.000001 AS duration, "SpanAttributes", "ResourceAttributes",',
       `CASE WHEN LOWER("StatusCode") IN ('error', 'status_code_error') THEN 2 WHEN LOWER("StatusCode") IN ('ok', 'status_code_ok') THEN 1 ELSE 0 END as statusCode`,
       `FROM "default"."otel_traces" WHERE traceID = trace_id AND "Timestamp" >= trace_start AND "Timestamp" <= trace_end`
